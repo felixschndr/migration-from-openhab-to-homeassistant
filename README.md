@@ -59,9 +59,92 @@ To begin with, I have to introduce how the two systems depict real world devices
   - The `Device` contains one or more `Entities` that control properties such as on/off state and brightness. These
     `Entities` are directly accessible for automation and user interaction.
 
-So there is one more abstraction layer in openHAB: the `Channel`s layer sits between the physical device (`Thing`) and the
-user interface/automation (`Item`).
+So there is one more abstraction layer in openHAB: the `Channel`s layer sits between the physical device (`Thing`) and the user interface/automation (`Item`).
 
 Understanding this was crucial to work with Home Assistant.
 
 ## Starting point
+
+TODO
+
+## Installation method
+
+Home Assistant allows multiple ways of being installed:
+ - Home Assistant Green: A little server that has the software pre-installed
+ - Installing on own hardware: Installing the software barebones on a dedicated device
+ - Containerized: Running the software in a container (e.g., by using Docker)
+
+Since I run all my homelab software in a container and want all of it to run on my single server, I choose the containerized version of Home Assistant which I run using Docker.
+
+Some installation guides advise against using the container as it is the _expert_ installation method. However I had to problems whatsoever with using it:
+```yaml
+services:
+    homeassistant:
+        image: "ghcr.io/home-assistant/home-assistant:stable"
+        container_name: homeassistant_app
+        volumes:
+            - ./data/homeassistant/config:/config
+            - /etc/localtime:/etc/localtime:ro
+            - /run/dbus:/run/dbus:ro
+        restart: unless-stopped
+        ports:
+            - 11000:8123
+```
+Moreover, some docs say that using HACS, the `Home Assistant Community Store` which allows installation of custom integrations, is not possible using the container. However, this is just not true: As [stated in the docs](https://www.hacs.xyz/docs/use/download/download/#to-download-hacs-container) installation is as simple as running one script:
+```sh
+$ docker exec -it <name of the container running homeassistant> bash
+
+wget -O - https://get.hacs.xyz | bash -
+```
+
+## The Home Assistant cloud
+
+One thing I was afraid of before starting to use Home Assistant was the Home Assistant Cloud as it is not free like the openHAB cloud. The cloud connectors of both systems allow the devices configured in them to be accessible by Alexa, which is a hard requirement for me.
+
+The cloud integration of Home Assistant costs 75 EUR per year ([depending on your location and currency](https://www.nabucasa.com/pricing/)) which is something I wanted to avoid.
+
+Luckily, there is the [Home Assistant Matter Hub](https://github.com/t0bst4r/home-assistant-matter-hub) that allows to expose devices from Home Assistant using Matter to Alexa. This has two major advantages: _It does not use the cloud and it does not use the cloud_. Firstly, you don't have to pay the fee to use the cloud of Home Assistant. Secondly, all the communication is local and not depending on some cloud server. (When the internet is down at home this still won't allow devices to be controlled by voice using Alexa since the speech to text recognition of Alexa still runs in the cloud, but it's a step in the right direction.)
+
+The Home Assistant cloud has more features than only the voice service integration such as a remote connection, so you can access your Home Assistant instance on the go. However, since I have a VPN configured to my home network, I have no usage for that feature. Thus, using the Home Assistant Matter Hub allows me to ditch the cloud subscription entirely.
+
+## Home Assistant Matter Hub
+
+As stated before, I use the Home Assistant Matter Hub to expose the devices I want to be able to control with my voice to Alexa. As the integration uses Matter, it is not limited to the smart home system of Amazon but also integrates easily into Google Home and Apple Home.
+
+### Setup
+
+Setup of the integration was quite easy by following the [documentation](https://t0bst4r.github.io/home-assistant-matter-hub/installation#id-2-manual-deployment). Since I use the containerized version of Home Assistant I do not have access to Add-Ons. However, the integration allows to be used by deploying its own container:
+```yaml
+services:
+    matter-hub:
+        image: ghcr.io/t0bst4r/home-assistant-matter-hub
+        container_name: homeassistant_matterhub
+        restart: unless-stopped
+        network_mode: host
+        environment:
+            - HAMH_HOME_ASSISTANT_URL=https://homeassistant.<mydomain>.tld
+            - HAMH_HOME_ASSISTANT_ACCESS_TOKEN=${MATTER_HUB_ACCESS_TOKEN}
+            - HAMH_LOG_LEVEL=info
+            - HAMH_HTTP_PORT=11001
+        volumes:
+            - ./data/matter-hub:/data
+```
+Running the container exposed a Web interface on the port defined by the `HAMH_HTTP_PORT` variable. There you can `Create a new bridge`. The settings of a `bridge` are pretty simple:
+- `Name`: The name of the bridge. This can be generic, I named mine `Matter Hub`.
+- `Port` and `Country Code` can be left empty/set to the default.
+- `Include`: This it where it is configured which devices are exposed to the voice assistant. I set the `Type` to `label` and the `Value` to `matterhub`.This ensures that all entities that have the aforementioned label are exposed. This way it is not necessary to choose the entities one by one in the Web UI of the matter hub. Instead, adding a simple label in Home Assistant is enough to expose them.
+
+After configuring the bridge it is sensible to choose some devices that shall be exposed to it. For this I created a label in Home Assistant called `MatterHub` (notice this can be uppercase but the setting of the matter bridge has to be lowercase) and added the label to the wanted entities:
+![](assets/labels.png)
+![](assets/matterhubentities.png)
+
+As a last step it is necessary to add the bridge to the voice system (in my case Alexa). In the case of using Alexa this is a matter of
+1. Opening the Alexa app,
+2. Switching the tab to `Devices`,
+3. Adding a device by clicking on the `+` on the top right,
+4. Scrolling down to `Other`,
+5. Choosing `Matter`
+6. Taking a picture of the QR-Code presented on the top left of page of the bridge
+   ![](assets/matterbridgeunconnetced.png)
+7. Afterwards, all the devices will show up in the App and can be controlled via voice without the usage of the Home Assistant Cloud. Also the Web UI shows that the connection was successful:
+   ![](assets/matterbridgeconnected.png)
