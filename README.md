@@ -145,6 +145,18 @@ As a last step it is necessary to add the bridge to the voice system (in my case
 4. Scrolling down to `Other`,
 5. Choosing `Matter`
 6. Taking a picture of the QR-Code presented on the top left of page of the bridge
+
    ![](assets/matterbridgeunconnetced.png)
 7. Afterwards, all the devices will show up in the App and can be controlled via voice without the usage of the Home Assistant Cloud. Also the Web UI shows that the connection was successful:
+
    ![](assets/matterbridgeconnected.png)
+
+## Additional resources and sources
+
+- German YouTuber that explains details of Home Assistant and tangent technologies like Zigbee, Matter and Thread very well: [Simon42](https://www.youtube.com/@simon42)
+  - [Video about Thread](https://youtu.be/aAl7pK6F7Tw?si=kZ1THs3y1RpODWXS)
+  - [Video about Matter Hub](https://youtu.be/yOkPzEzuVhM?si=bjSXb0L0qWeGX56O)
+  - [Video about ZHA vs. Zigbee2MQTT](https://youtu.be/j7Lq7ylLtZU?si=gtjgpWL-Ma7sHRR2)
+- [Installation docs of Home Assistant](https://www.home-assistant.io/installation/)
+- [Installation docs of HACS](https://www.hacs.xyz/docs/use/download/download/#to-download-hacs-container)
+- [Installation docs of Home Assistant Matter Hub](https://t0bst4r.github.io/home-assistant-matter-hub/)
