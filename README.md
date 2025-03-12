@@ -1,5 +1,21 @@
-# Migration from openHAB to Homeassistant
+## Migration from openHAB to Home Assistant
 In this blog post, I want to document my migration from the smart home system openHAB to Home Assistant.
+
+## Table of contents
+
+<!--ts-->
+   * [Migration from openHAB to Home Assistant](#migration-from-openhab-to-home-assistant)
+   * [Table of contents](#table-of-contents)
+   * [Introduction](#introduction)
+   * [Reasons to switch](#reasons-to-switch)
+   * [Handling of devices in the two systems](#handling-of-devices-in-the-two-systems)
+   * [Starting point](#starting-point)
+   * [Installation method](#installation-method)
+   * [The Home Assistant cloud](#the-home-assistant-cloud)
+   * [Home Assistant Matter Hub](#home-assistant-matter-hub)
+      * [Setup](#setup)
+   * [Additional resources and sources](#additional-resources-and-sources)
+<!--te-->
 
 ## Introduction
 
