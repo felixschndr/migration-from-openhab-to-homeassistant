@@ -14,7 +14,8 @@ In this blog post, I want to document my migration from the smart home system op
    * [The Home Assistant cloud](#the-home-assistant-cloud)
    * [Home Assistant Matter Hub](#home-assistant-matter-hub)
       * [Setup](#setup)
-   * [Additional resources and sources](#additional-resources-and-sources)
+      * [Monitoring](#monitoring)
+   * [Sources and additional resources](#sources-and-additional-resources)
 <!--te-->
 
 ## Introduction
@@ -23,13 +24,13 @@ I've been using openHAB for some years now. As I recall I started using it when 
 
 To be honest, I tried the migration to Home Assistant a few years ago already. However, I did not finish it and had both systems running side by side. Since I did not have the time back then to finish the project, I ditched Home Assistant and came back to my trusted and known system. This time my goal is to re-setup Home Assistant and migrate fully to it.
 
-openHAB is currently at version `4.3.3` and is about to release version `5`. At time of writing this (March 2025) the maintainers are [discussing with the community wanted features](https://community.openhab.org/t/ideas-and-discussion-what-features-do-you-want-in-openhab-5-0/160573).
+openHAB is currently at version `4.3.3` and is about to release version `5`. At the time of writing this (March 2025), the maintainers are [discussing with the community wanted features](https://community.openhab.org/t/ideas-and-discussion-what-features-do-you-want-in-openhab-5-0/160573).
 
 ## Reasons to switch
 
 I like openHAB and since I have used it for such a long time, I've become quite comfortable with it. However, there are some reasons why I wanted to try out Home Assistant:
- - Written in `Python`: Since I am a full-time **Python** developer, I like to take a look under the hood. For example I worked with maintainers of openHAB to develop, maintain and fix some bindings. However, this is very limited as openHAB is written in `Java` and I don't feel that comfortable with it.
-- Automations in openHAB: As I started to use openhab in 2017 there were only the [DLS rules](https://www.openhab.org/docs/configuration/rules-dsl.html), a proprietary language based on Java. Since then, they released [JRuby Scripting](https://www.openhab.org/addons/automation/jrubyscripting/) and [JS Scripting](https://www.openhab.org/addons/automation/jsscripting/) as replacements. However, I never really come to pace with them. Since the DSL rules are pretty old, the syntax is quite clunky and limited.
+ - Written in `Python`: Since I am a full-time **Python** developer, I like to take a look under the hood. For example, I worked with maintainers of openHAB to develop, maintain and fix some bindings. However, this is very limited as openHAB is written in `Java` and I don't feel that comfortable with it.
+- Automations in openHAB: As I started to use openhab in 2017, there were only the [DLS rules](https://www.openhab.org/docs/configuration/rules-dsl.html), a proprietary language based on Java. Since then, they have released [JRuby Scripting](https://www.openhab.org/addons/automation/jrubyscripting/) and [JS Scripting](https://www.openhab.org/addons/automation/jsscripting/) as replacements. However, I never really come to pace with them. Since the DSL rules are pretty old, the syntax is quite clunky and limited.
   
   Often there have to be multiple conversions for simple things. For example, to determine weather now is before some point in time you have to write something like 
   ```java
@@ -44,7 +45,7 @@ I like openHAB and since I have used it for such a long time, I've become quite 
   ```java
   Timer_Schlafzimmer_Heizdecke_Ende.sendCommand(DateTimeType.valueOf(now.plusMinutes(DauerInMinuten).toLocalDateTime().toString()))
   ```
- - Error messages in openHAB: When developing automations in openHAB the error messages leave a lot to be desired. Often the following error message occurs:
+ - Error messages in openHAB: When developing automations in openHAB, the error messages leave a lot to be desired. Often the following error message occurs:
    ```java
    [ERROR] [openhab.core.automation.module.script.internal.handler.AbstractScriptModuleHandler] - Script execution of rule with UID 'Cronjob-2' failed: Could not invoke method: org.openhab.core.model.script.actions.BusEvent.sendCommand(org.openhab.core.items.Item,java.lang.String) on instance: null in Cronjob
    ```
@@ -92,7 +93,7 @@ Home Assistant allows multiple ways of being installed:
 
 Since I run all my homelab software in a container and want all of it to run on my single server, I choose the containerized version of Home Assistant which I run using Docker.
 
-Some installation guides advise against using the container as it is the _expert_ installation method. However I had to problems whatsoever with using it:
+Some installation guides advise against using the container as it is the _expert_ installation method. However, I had no problems whatsoever with using it:
 ```yaml
 services:
     homeassistant:
@@ -117,9 +118,9 @@ wget -O - https://get.hacs.xyz | bash -
 
 One thing I was afraid of before starting to use Home Assistant was the Home Assistant Cloud as it is not free like the openHAB cloud. The cloud connectors of both systems allow the devices configured in them to be accessible by Alexa, which is a hard requirement for me.
 
-The cloud integration of Home Assistant costs 75 EUR per year ([depending on your location and currency](https://www.nabucasa.com/pricing/)) which is something I wanted to avoid.
+The cloud integration of Home Assistant costs 75 EUR per year ([depending on your location and currency](https://www.nabucasa.com/pricing/)), which is something I wanted to avoid.
 
-Luckily, there is the [Home Assistant Matter Hub](https://github.com/t0bst4r/home-assistant-matter-hub) that allows to expose devices from Home Assistant using Matter to Alexa. This has two major advantages: _It does not use the cloud and it does not use the cloud_. Firstly, you don't have to pay the fee to use the cloud of Home Assistant. Secondly, all the communication is local and not depending on some cloud server. (When the internet is down at home this still won't allow devices to be controlled by voice using Alexa since the speech to text recognition of Alexa still runs in the cloud, but it's a step in the right direction.)
+Luckily, there is the [Home Assistant Matter Hub](https://github.com/t0bst4r/home-assistant-matter-hub) that allows to expose devices from Home Assistant using Matter to Alexa. This has two major advantages: _It does not use the cloud and it does not use the cloud_. Firstly, you don't have to pay the fee to use the cloud of Home Assistant. Secondly, all the communication is local and not depending on some cloud server. (When the internet is down at home, this still won't allow devices to be controlled by voice using Alexa since the speech to text recognition of Alexa still runs in the cloud. But it's a step in the right direction.)
 
 The Home Assistant cloud has more features than only the voice service integration such as a remote connection, so you can access your Home Assistant instance on the go. However, since I have a VPN configured to my home network, I have no usage for that feature. Thus, using the Home Assistant Matter Hub allows me to ditch the cloud subscription entirely.
 
@@ -129,7 +130,7 @@ As stated before, I use the Home Assistant Matter Hub to expose the devices I wa
 
 ### Setup
 
-Setup of the integration was quite easy by following the [documentation](https://t0bst4r.github.io/home-assistant-matter-hub/installation#id-2-manual-deployment). Since I use the containerized version of Home Assistant I do not have access to Add-Ons. However, the integration allows to be used by deploying its own container:
+Setup of the integration was quite easy by following the [documentation](https://t0bst4r.github.io/home-assistant-matter-hub/installation#id-2-manual-deployment). Since I use the containerized version of Home Assistant, I do not have access to Add-Ons. However, the integration allows to be used by deploying its own container:
 ```yaml
 services:
     matter-hub:
@@ -150,24 +151,31 @@ Running the container exposed a Web interface on the port defined by the `HAMH_H
 - `Port` and `Country Code` can be left empty/set to the default.
 - `Include`: This it where it is configured which devices are exposed to the voice assistant. I set the `Type` to `label` and the `Value` to `matterhub`.This ensures that all entities that have the aforementioned label are exposed. This way it is not necessary to choose the entities one by one in the Web UI of the matter hub. Instead, adding a simple label in Home Assistant is enough to expose them.
 
-After configuring the bridge it is sensible to choose some devices that shall be exposed to it. For this I created a label in Home Assistant called `MatterHub` (notice this can be uppercase but the setting of the matter bridge has to be lowercase) and added the label to the wanted entities:
+After configuring the bridge, it is sensible to choose some devices that shall be exposed to it. For this I created a label in Home Assistant called `MatterHub` (notice this can be uppercase but the setting of the matter bridge has to be lowercase) and added the label to the wanted entities:
 ![](assets/labels.png)
 ![](assets/matterhubentities.png)
 
-As a last step it is necessary to add the bridge to the voice system (in my case Alexa). In the case of using Alexa this is a matter of
+As a last step, it is necessary to add the bridge to the voice system (in my case, Alexa). In the case of using Alexa, this is a matter of
 1. Opening the Alexa app,
 2. Switching the tab to `Devices`,
 3. Adding a device by clicking on the `+` on the top right,
 4. Scrolling down to `Other`,
-5. Choosing `Matter`
+5. Choosing `Matter`,
 6. Taking a picture of the QR-Code presented on the top left of page of the bridge
 
    ![](assets/matterbridgeunconnetced.png)
-7. Afterwards, all the devices will show up in the App and can be controlled via voice without the usage of the Home Assistant Cloud. Also the Web UI shows that the connection was successful:
+7. Afterwards, all the devices will show up in the App and can be controlled via voice without the usage of the Home Assistant Cloud. Also, the Web UI shows that the connection was successful:
 
    ![](assets/matterbridgeconnected.png)
 
-## Additional resources and sources
+### Monitoring
+
+Since this integration is relatively new and still has some bugs, it sometimes requires a restart or some other kind of attention. To monitor if everything works as expected, I use [Uptime Kuma](https://github.com/louislam/uptime-kuma) which checks if the bridge is `commisioned`. This is done by crawling the API of the Matter Hub for the state of its bridge. I found the URL by taking using the developer tools and looking for the request to the URL starting by `/api/matter/bridges?_s=`. This request returns a JSON response containing the wanted information: `commissioning.isCommissioned`. This can be checked by Uptime Kuma:
+
+![](assets/matterhubinuptimekumaconfig.png)
+![](assets/matterhubinuptimekumadisplay.png)
+
+## Sources and additional resources
 
 - German YouTuber that explains details of Home Assistant and tangent technologies like Zigbee, Matter and Thread very well: [Simon42](https://www.youtube.com/@simon42)
   - [Video about Thread](https://youtu.be/aAl7pK6F7Tw?si=kZ1THs3y1RpODWXS)
