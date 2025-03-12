@@ -26,7 +26,7 @@ To be honest, I tried the migration to Home Assistant a few years ago already. H
 
 openHAB is currently at version `4.3.3` and is about to release version `5`. At the time of writing this (March 2025), the maintainers are [discussing with the community wanted features](https://community.openhab.org/t/ideas-and-discussion-what-features-do-you-want-in-openhab-5-0/160573).
 
-## Reasons to switch
+### Reasons to switch
 
 I like openHAB and since I have used it for such a long time, I've become quite comfortable with it. However, there are some reasons why I wanted to try out Home Assistant:
  - Written in `Python`: Since I am a full-time **Python** developer, I like to take a look under the hood. For example, I worked with maintainers of openHAB to develop, maintain and fix some bindings. However, this is very limited as openHAB is written in `Java` and I don't feel that comfortable with it.
@@ -62,7 +62,7 @@ I like openHAB and since I have used it for such a long time, I've become quite 
    ![](assets/error%20in%20log.png)
  
 
-## Handling of devices in the two systems
+### Handling of devices in the two systems
 
 To begin with, I have to introduce how the two systems depict real world devices. For that, we use the example of a lamp:
 
@@ -80,11 +80,11 @@ So there is one more abstraction layer in openHAB: the `Channel`s layer sits bet
 
 Understanding this was crucial to work with Home Assistant.
 
-## Starting point
+### Starting point
 
 TODO
 
-## Installation method
+## Installation
 
 Home Assistant allows multiple ways of being installed:
  - Home Assistant Green: A little server that has the software pre-installed
@@ -114,7 +114,11 @@ $ docker exec -it <name of the container running homeassistant> bash
 wget -O - https://get.hacs.xyz | bash -
 ```
 
-## The Home Assistant cloud
+## Configuring Home Assistant
+
+In the following section, I will write about noteworthy things I discovered that were not _trivial_ and might help you.
+
+### The Home Assistant cloud
 
 One thing I was afraid of before starting to use Home Assistant was the Home Assistant Cloud as it is not free like the openHAB cloud. The cloud connectors of both systems allow the devices configured in them to be accessible by Alexa, which is a hard requirement for me.
 
@@ -124,11 +128,11 @@ Luckily, there is the [Home Assistant Matter Hub](https://github.com/t0bst4r/hom
 
 The Home Assistant cloud has more features than only the voice service integration such as a remote connection, so you can access your Home Assistant instance on the go. However, since I have a VPN configured to my home network, I have no usage for that feature. Thus, using the Home Assistant Matter Hub allows me to ditch the cloud subscription entirely.
 
-## Home Assistant Matter Hub
+### Home Assistant Matter Hub
 
 As stated before, I use the Home Assistant Matter Hub to expose the devices I want to be able to control with my voice to Alexa. As the integration uses Matter, it is not limited to the smart home system of Amazon but also integrates easily into Google Home and Apple Home.
 
-### Setup
+#### Setup
 
 Setup of the integration was quite easy by following the [documentation](https://t0bst4r.github.io/home-assistant-matter-hub/installation#id-2-manual-deployment). Since I use the containerized version of Home Assistant, I do not have access to Add-Ons. However, the integration allows to be used by deploying its own container:
 ```yaml
@@ -168,19 +172,25 @@ As a last step, it is necessary to add the bridge to the voice system (in my cas
 
    ![](assets/matterbridgeconnected.png)
 
-### Monitoring
+#### Monitoring
 
 Since this integration is relatively new and still has some bugs, it sometimes requires a restart or some other kind of attention. To monitor if everything works as expected, I use [Uptime Kuma](https://github.com/louislam/uptime-kuma) which checks if the bridge is `commisioned`. This is done by crawling the API of the Matter Hub for the state of its bridge. I found the URL by taking using the developer tools and looking for the request to the URL starting by `/api/matter/bridges?_s=`. This request returns a JSON response containing the wanted information: `commissioning.isCommissioned`. This can be checked by Uptime Kuma:
 
 ![](assets/matterhubinuptimekumaconfig.png)
 ![](assets/matterhubinuptimekumadisplay.png)
 
+### Roborock Integration
+
+### Voice Assistants
+
+### Zigbee Network
+
 ## Sources and additional resources
 
 - German YouTuber that explains details of Home Assistant and tangent technologies like Zigbee, Matter and Thread very well: [Simon42](https://www.youtube.com/@simon42)
-  - [Video about Thread](https://youtu.be/aAl7pK6F7Tw?si=kZ1THs3y1RpODWXS)
-  - [Video about Matter Hub](https://youtu.be/yOkPzEzuVhM?si=bjSXb0L0qWeGX56O)
-  - [Video about ZHA vs. Zigbee2MQTT](https://youtu.be/j7Lq7ylLtZU?si=gtjgpWL-Ma7sHRR2)
+  - [Video about Thread](https://youtu.be/aAl7pK6F7Tw)
+  - [Video about Matter Hub](https://youtu.be/yOkPzEzuVhM)
+  - [Video about ZHA vs. Zigbee2MQTT](https://youtu.be/j7Lq7ylLtZU)
 - [Installation docs of Home Assistant](https://www.home-assistant.io/installation/)
 - [Installation docs of HACS](https://www.hacs.xyz/docs/use/download/download/#to-download-hacs-container)
 - [Installation docs of Home Assistant Matter Hub](https://t0bst4r.github.io/home-assistant-matter-hub/)
