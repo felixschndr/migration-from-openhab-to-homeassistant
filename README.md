@@ -7,14 +7,18 @@ In this blog post, I want to document my migration from the smart home system op
    * [Migration from openHAB to Home Assistant](#migration-from-openhab-to-home-assistant)
    * [Table of contents](#table-of-contents)
    * [Introduction](#introduction)
-   * [Reasons to switch](#reasons-to-switch)
-   * [Handling of devices in the two systems](#handling-of-devices-in-the-two-systems)
-   * [Starting point](#starting-point)
-   * [Installation method](#installation-method)
-   * [The Home Assistant cloud](#the-home-assistant-cloud)
-   * [Home Assistant Matter Hub](#home-assistant-matter-hub)
-      * [Setup](#setup)
-      * [Monitoring](#monitoring)
+      * [Reasons to switch](#reasons-to-switch)
+      * [Handling of devices in the two systems](#handling-of-devices-in-the-two-systems)
+      * [Starting point](#starting-point)
+   * [Installation](#installation)
+   * [Configuring Home Assistant](#configuring-home-assistant)
+      * [The Home Assistant cloud](#the-home-assistant-cloud)
+      * [Home Assistant Matter Hub](#home-assistant-matter-hub)
+         * [Setup](#setup)
+         * [Monitoring](#monitoring)
+      * [Roborock Integration](#roborock-integration)
+      * [Voice Assistants](#voice-assistants)
+      * [Zigbee Network](#zigbee-network)
    * [Sources and additional resources](#sources-and-additional-resources)
 <!--te-->
 
@@ -180,6 +184,117 @@ Since this integration is relatively new and still has some bugs, it sometimes r
 ![](assets/matterhubinuptimekumadisplay.png)
 
 ### Roborock Integration
+
+A pain point I had with openHAB was the integration of my [Roborock Q7 Max Vacuum](https://de.roborock.com/pages/roborock-q7-max). It's a great vacuum, however, integrating it into third party systems has some quirks:
+- There are two apps to control the vacuum: the `Xiaomi` app and the `Roborock` app. It is not clear to the user which one to use as they both offer the same functionality but look different and require different user credentials. Moreover, only one of them can be used at a time (the vacuum must be factory reset to set up in the other app). 
+- Cleaning the whole apparent is pretty straightforward. However, a crucial part (at least for me) is cleaning only selected rooms. To achieve this, it is necessary to pass on a certain string of room ids. The vacuum returns a list of rooms via its API, and you have to figure out a way to send the correct ids to it. In openHAB I had to manually create a mapping
+    ```text
+    Office=19
+    Bathroom=21
+    Dining=17
+    Corridor=20
+    Kitchen=22
+    Bedroom=18
+    LivingRoom=16
+    ```
+  and individual items
+    ```
+    String			Vacuum_System_Vacuum_Command							{channel="miio:vacuum:Vacuum_System_Vacuum:actions#commands"}  
+    Group:Number:COUNT(ON)	Vacuum_System_Room_Group	"Räume [%d]"
+    Switch			Vacuum_System_Room_Office	"Office"	(Vacuum_System_Room_Group)
+    Switch			Vacuum_System_Room_Bathroom	"Bathroom"	(Vacuum_System_Room_Group)
+    Switch			Vacuum_System_Room_Dining	"Dining"	(Vacuum_System_Room_Group)
+    Switch			Vacuum_System_Room_Corridor	"Corridor"	(Vacuum_System_Room_Group)
+    Switch			Vacuum_System_Room_Kitchen	"Kitchen"	(Vacuum_System_Room_Group)
+    Switch			Vacuum_System_Room_Bedroom	"Bedroom"       (Vacuum_System_Room_Group)
+    Switch			Vacuum_System_Room_LivingRoom	"LivingRoom"    (Vacuum_System_Room_Group)
+    Switch			Vacuum_System_Start		"Start"			
+    ```
+  and a rule
+    ```
+    rule "Clean in selected rooms"
+    when
+        Item Vacuum_System_Start changed to ON
+    then
+        val String RuleName = Filename + ": \"Clean in selected rooms\": "
+    
+        val ids = Vacuum_System_Room_Group
+            .members
+            .filter[ room | room.state == ON ]
+            .map[ name.replace("Vacuum_System_Room_", "") ]
+            .map[ name | transform("MAP", "VacuumRooms.map", name) ]
+            .join(", ")
+        val Command = "app_segment_clean[{\"segments\": [" + ids + "]}]"
+    
+        logInfo("Rule triggered", RuleName + Command)
+        Vacuum_System_Vacuum_Command.sendCommand(Command)
+    
+        Thread.sleep(10)
+    
+        Vacuum_System_Room_Group.members.forEach[ item | item.postUpdate(OFF) ]
+        Vacuum_System_Start.postUpdate(OFF)
+    end
+    ```
+
+Fortunately, the setup of my vacuum was pretty easy in Home Assistant:
+1. Set up the vacuum in the **Roborock** App.
+2. Install the Roborock integration from GitHub: https://github.com/humbertogontijo/homeassistant-roborock. The docs say that _It is recommended you switch to the core version of this integration._ However, only this version (in contrast to the one of the core) is able to extract the map of the appartement.
+3. Login in the newly installed Roborock integration. Afterwards, it will automatically add all the discovered vacuums to your system.
+4. Afterwards, you can add the `Vacuum Map Card` to your dashboard
+
+   ![](assets/vacuumconfig.png)
+5. Click `Generate Rooms Config`. This will parse the list of the available rooms provided by the API. Moreover, it will create rectangles in the map view that show the corresponding rooms. These then can be selected and cleaned individually.
+
+   ![](assets/vacuumrooms.png)
+6. By opening the code editor, you can change the icons of the rooms and their labels. E.g. 
+    ```yml
+    predefined_selections:
+      - id: "16"
+        icon:
+          name: mdi:broom
+          x: 26775
+          "y": 26400
+        label:
+          text: Room 16
+          x: 26775
+          "y": 26400
+          offset_y: 35
+        outline:
+          - - 23400
+            - 24500
+          - - 30150
+            - 24500
+          - - 30150
+            - 28300
+          - - 23400
+            - 28300
+    ```
+   can be changed to
+    ```yml
+    predefined_selections:
+      - id: "16"
+        icon:
+          name: mdi:sofa
+          x: 26775
+          "y": 26400
+        label:
+          text: living room
+          x: 26775
+          "y": 26400
+          offset_y: 35
+        outline:
+          - - 23400
+            - 24500
+          - - 30150
+            - 24500
+          - - 30150
+            - 28300
+          - - 23400
+            - 28300
+    ```
+   If you want, you can remove the labels entirely since the room is represented by its icon. My finished setup looks like this:
+
+   ![](assets/vacuumfinished.png)
 
 ### Voice Assistants
 
