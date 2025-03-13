@@ -175,10 +175,12 @@ As a last step, it is necessary to add the bridge to the voice system (in my cas
 7. Afterwards, all the devices will show up in the App and can be controlled via voice without the usage of the Home Assistant Cloud. Also, the Web UI shows that the connection was successful:
 
    ![](assets/matterbridgeconnected.png)
+8. When adding new devices, I noticed that it is necessary to restart the integration in order for them to be picked up. This seems to be a bug in the current version (which is expected as this is an `alpha` release)
+
 
 #### Monitoring
 
-Since this integration is relatively new and still has some bugs, it sometimes requires a restart or some other kind of attention. To monitor if everything works as expected, I use [Uptime Kuma](https://github.com/louislam/uptime-kuma) which checks if the bridge is `commisioned`. This is done by crawling the API of the Matter Hub for the state of its bridge. I found the URL by taking using the developer tools and looking for the request to the URL starting by `/api/matter/bridges?_s=`. This request returns a JSON response containing the wanted information: `commissioning.isCommissioned`. This can be checked by Uptime Kuma:
+Since this integration is relatively new and still has some bugs, it sometimes requires a restart or some other kind of attention. To monitor if everything works as expected, I use [Uptime Kuma](https://github.com/louislam/uptime-kuma) which checks if the bridge is `running` and `comissioned`. This is done by crawling the API of the Matter Hub for the state of its bridge. I found the URL by taking using the developer tools and looking for the request to the URL starting by `/api/matter/bridges?_s=`. This request returns a JSON response containing the wanted information: `commissioning.isCommissioned and status="running"`. This can be checked by Uptime Kuma:
 
 ![](assets/matterhubinuptimekumaconfig.png)
 ![](assets/matterhubinuptimekumadisplay.png)
