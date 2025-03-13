@@ -19,6 +19,8 @@ In this blog post, I want to document my migration from the smart home system op
       * [Roborock Integration](#roborock-integration)
       * [Voice Assistants](#voice-assistants)
       * [Zigbee Network](#zigbee-network)
+      * [Matter](#matter)
+   * [Future](#future)
    * [Sources and additional resources](#sources-and-additional-resources)
 <!--te-->
 
@@ -335,6 +337,16 @@ There are two steps I want to tackle in the future:
 
 
 ### Zigbee Network
+
+### Matter
+
+## Future
+
+There are some things I want to set up/change/replace in the future which I have not come around to do so just yet:
+- Local LLMs: As described in the [Voice Assistants](#voice-assistants) section, I'd like to replace the dependency of OpenAI with a local LLM running on my server at home. Currently, the server is not equipped with sufficient hardware, but I will upgrade that in the future. 
+- Replace all Alexas with other Hardware: As described in the [Voice Assistants](#voice-assistants) section, I'd like to
+  replace all my voice assistants with a privacy focussed community driven Hardware.
+- Improve my dashboard: The dashboard is subject to constant change as hardware is switched out and new automations and integrations get added. From my experience with openHAB in the past years, I have learned that the dashboard is never finished and gets iterated on all the time. However, in a perfect world, I would not need it as the home does most of it on its own and is controlled primarily through voice by the user(s).
 
 ## Sources and additional resources
 
