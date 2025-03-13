@@ -300,6 +300,40 @@ Fortunately, the setup of my vacuum was pretty easy in Home Assistant:
 
 ### Voice Assistants
 
+Something that frustrates me a lot is my voice assistant Alexa. In the years of using her, I noticed that she is *just plain stupid*. She gets basic stuff wrong all the time and can't answer basic questions. Once I tried switching all my voice assistants to Google Home and was quite happy with it for a time. The smart assistant of Google is way smarter than the one of Amazon. However, 90 % of the time I just want to control my smart home devices and for that Alexa is better as her response times are way lower. Asking Google Home to control a device takes 3 to 10 seconds, using Alexa this task is done in 1 to 2 seconds. Moreover, Google removed the integration for third party shopping lists, thus eliminating the possibility to add something to my shopping cart, which is a feature I use daily in the kitchen.
+
+On 02/26/2025 [Amazon announced _Alexa+_](https://www.youtube.com/watch?v=YYbAJ2nh25M), which integrates LLMs into Alexa. The functionality seems to be greatly improved judging by the trailer. However, there are three concerns:
+- Price: _Alexa+_ will probably not be free and come with a monthly subscription.
+- Availability: It is unclear when _Alexa+_ comes to my home country (Germany). It is rumored to be late 2025, but noone knows.
+- Privacy: Confidentiality was always something to be concerned about when allowing company access to your personal home. There was one sentence in the trailer that struck out: 
+  
+  _Person asks: Wait, did someone let the dog out today?_
+
+  _Alexa answers: I checked the cameras and yes, in fact <dogname> was just out._
+
+  This sentence raised a lot of eyebrows. Someone of my favorite comments from the trailer:
+  - _"I checked the cameras" 🚩 is a No No_
+  - _Paying a subscription for this privacy nightmare [is] wild._
+  - _This would've been impressive a few years ago, but it's good that Amazon is not too far behind._
+  - _finally alexa also integrated chatgpt api_
+
+The Home Assistant community did (in contrast to the developers of Alexa) stand still in the past. [2023 was Home
+Assistant's year of Voice](https://www.home-assistant.io/blog/2022/12/20/year-of-voice/) which had some great improvements regarding this. It is now possible to control all devices in Home Assistant with the _Assist_. Assist is a
+text-based dialog that allows the user to interact with its smart home. This is completely local, and lightning fast (sub 0.5 second time until the action was executed).
+
+This is pretty great but can be elevated to the next level by adding a LLM to it. For that, I am using the [OpenAI conversation](https://www.home-assistant.io/integrations/openai_conversation) integration. This way I can interact with my smart home as I would with a human:
+![](assets/voiceassistant.png)
+This currently works on my phone and computer.
+
+There are two steps I want to tackle in the future:
+- Replace OpenAI with a local running model: I'd like to run some model locally (like llama with [Ollama](https://ollama.com/)) to not be dependent on OpenAI and my internet access and have all data locally. For this, sadly, my current home server is too weak and has not enough memory. So to do this, I will have to get an upgrade at some point in the future.
+- Replace my Alexas with other Hardware: Home Assistant just launched (February 2025) the [Voice PE](https://www.home-assistant.io/voice-pe/) which is a replacement for such voice assistants. Using it combined with a local running LLM would allow me to have my voice assistant entirely local, without any internet access. This ensures uptime during internet outages and privacy of all my data.
+  ![](assets/voicevision.png)
+  Another promising option is the [Satellite1](https://futureproofhomes.net/) by FutureProofHomes that has similar features.
+
+  I will give the Home Assistant team and other developers some time to iterate on the Hardware a bit further to make it more polished, improve the German support and add Spotify Connect integration. But I am certain that I will replace all my Alexas with other Hardware at the end of 2025 or at the beginning of 2026. 
+
+
 ### Zigbee Network
 
 ## Sources and additional resources
