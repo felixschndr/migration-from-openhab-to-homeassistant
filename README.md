@@ -357,3 +357,6 @@ There are some things I want to set up/change/replace in the future which I have
 - [Installation docs of Home Assistant](https://www.home-assistant.io/installation/)
 - [Installation docs of HACS](https://www.hacs.xyz/docs/use/download/download/#to-download-hacs-container)
 - [Installation docs of Home Assistant Matter Hub](https://t0bst4r.github.io/home-assistant-matter-hub/)
+- [Home Assistant Blog: Year of Voice](https://www.home-assistant.io/blog/2022/12/20/year-of-voice/)
+- [Home Assistant Voice PE](https://www.home-assistant.io/voice-pe/)
+- [Satellite1](https://futureproofhomes.net/)
