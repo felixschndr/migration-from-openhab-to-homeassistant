@@ -179,13 +179,40 @@ As a last step, it is necessary to add the bridge to the voice system (in my cas
    ![](assets/matterbridgeconnected.png)
 8. When adding new devices, I noticed that it is necessary to restart the integration in order for them to be picked up. This seems to be a bug in the current version (which is expected as this is an `alpha` release)
 
-
 #### Monitoring
 
 Since this integration is relatively new and still has some bugs, it sometimes requires a restart or some other kind of attention. To monitor if everything works as expected, I use [Uptime Kuma](https://github.com/louislam/uptime-kuma) which checks if the bridge is `running` and `comissioned`. This is done by crawling the API of the Matter Hub for the state of its bridge. I found the URL by taking using the developer tools and looking for the request to the URL starting by `/api/matter/bridges?_s=`. This request returns a JSON response containing the wanted information: `commissioning.isCommissioned and status="running"`. This can be checked by Uptime Kuma:
 
 ![](assets/matterhubinuptimekumaconfig.png)
 ![](assets/matterhubinuptimekumadisplay.png)
+
+I also noticed that when starting the Matter Hub container at the same time as Home Assistant (which is the default case with dokcer compose), the Matter Hub does not start properly. This is due since the Matter Hub is unable to connect to Home Assistant and then fails. To combat this, I implemented a healthcheck for the Home Assistant container and let the Matter Hub container start up once the Home Assistant container is fully up and running:
+```yml
+services:
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    [...]
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "sh",
+          "-c",
+          "curl -s -H 'Authorization: Bearer ${CONTAINER_HEALTH_CHECK_ACCESS_TOKEN}' http://localhost:8123/api/config | jq -r '.state' | grep -E ^RUNNING",
+        ]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+      start_period: 90s
+      start_interval: 5s
+  matter-hub:
+    image: ghcr.io/t0bst4r/home-assistant-matter-hub
+    [...]
+    depends_on:
+      homeassistant:
+        condition: service_healthy
+```
+This works by crawling the API of Home Assistant for its state and checks if it is `RUNNING`. Only after that is the case the Matter Hub starts up. The `${CONTAINER_HEALTH_CHECK_ACCESS_TOKEN}` is a long-lived access token that can be [created in the `Security` section of the user profile](https://community.home-assistant.io/t/how-to-get-long-lived-access-token/162159/5).
 
 ### Roborock Integration
 
@@ -358,5 +385,6 @@ There are some things I want to set up/change/replace in the future which I have
 - [Installation docs of HACS](https://www.hacs.xyz/docs/use/download/download/#to-download-hacs-container)
 - [Installation docs of Home Assistant Matter Hub](https://t0bst4r.github.io/home-assistant-matter-hub/)
 - [Home Assistant Blog: Year of Voice](https://www.home-assistant.io/blog/2022/12/20/year-of-voice/)
+- [How to create a long-lived access token](https://community.home-assistant.io/t/how-to-get-long-lived-access-token/162159/5?u=felixschneider)
 - [Home Assistant Voice PE](https://www.home-assistant.io/voice-pe/)
 - [Satellite1](https://futureproofhomes.net/)
