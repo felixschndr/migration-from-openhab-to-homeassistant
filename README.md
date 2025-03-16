@@ -19,7 +19,8 @@ In this blog post, I want to document my migration from the smart home system op
       * [Roborock Integration](#roborock-integration)
       * [Voice Assistants](#voice-assistants)
       * [Zigbee Network](#zigbee-network)
-      * [Matter](#matter)
+         * [Setup of passwords for MQTT](#setup-of-passwords-for-mqtt)
+      * [The whole docker-compose.yml](#the-whole-docker-composeyml)
    * [Future](#future)
    * [Sources and additional resources](#sources-and-additional-resources)
 <!--te-->
@@ -365,7 +366,185 @@ There are two steps I want to tackle in the future:
 
 ### Zigbee Network
 
-### Matter
+While switching to Home Assistant, I decided to also work on the reliability of my devices. In the past, I had many problems with devices being unresponsive, and there is few that is more frustrating when you want to go to bed in the evening, and the light just won't turn off. Thus, I had the goal to increase the reliability of my devices. For this, I wanted to use a Mesh Network such that all devices can communicate with each other. 
+
+There are two main options when it comes to Mesh Networks in the smart home sector: Thread and Zigbee. Thread is newer than Zigbee. However, there are many more devices compatible with Zigbee than Thread. Since I wanted to be able to choose from a wide variety of devices and manufactures, I decided to go with Zigbee.
+
+After some research, I decided to by the [Sonoff Zigbee 3.0 USB Dongle Plus](https://sonoff.tech/product/gateway-and-sensors/sonoff-zigbee-3-0-usb-dongle-plus-e/). This is a product reviewed, recommended and trusted and by many. Moreover, it is one of the recommended devices in the [Home Assistant docs](https://www.home-assistant.io/integrations/zha/#recommended-zigbee-radio-adapters-and-modules).
+
+When using Zigbee with Home Assistant, there are two major integrations to choose from: Zigbee Home Automation (ZHA) and Zigbee2MQTT.
+
+Both support connecting devices via Zigbee to Home Assistant, and they offer very similar functionality. ZHA is a native Home Assistant integration that provides a straightforward setup and management experience, making it ideal for users who want a simpler, more direct approach. Zigbee2MQTT relies on an external MQTT broker, offering broader device compatibility and advanced customization options, which can appeal to those seeking deeper control over their Zigbee network.
+
+**Firstly** I chose to go with ZHA since I was working with two (for me) new technologies (Home Assistant and Zigbee), and I didn't want to add any complexity by adding MQTT to that. I installed the integration as described in the [docs](https://www.home-assistant.io/integrations/zha/#configuration), connected my devices and was pretty happy.
+
+However, I had a problem with my Philips Hue motion sensors that I connected via ZHA: The timeout of them was set to 5 minutes and not changeable. So, when they stopped to detect motion, it took 5 minutes for the device in Home Assistant to report no further movement. This was a dealbreaker for me as I wanted to build some automations that turn the light off after *only* 30s of no movement. After [asking in the community forum](https://community.home-assistant.io/t/cooldown-time-of-hue-motion-sensor-using-zha/863210) and not getting a helpful response and finding out that is possible to configure that timeout in Zigbee2MQTT I decided to try Zigbee2MQTT.
+
+While I was worried that the setup would be a huge hassle, it turned out to be quite the opposite. To use Zigbee2MQTT in Home Assistant Zigbee2MQTT and the MQTT broker can be setup as an Add-On. However, since I use the containerized version of Home Assistant, I can't use Add-Ons. Fortunately setting both of them as their own containers up is really easy. I started by updating my docker-compose.yml:
+```yml
+services:
+    homeassistant:
+        image: ghcr.io/home-assistant/home-assistant:stable
+        [...]
+        depends_on:
+            - mosquitto
+    zigbee2mqtt:
+        image: koenkk/zigbee2mqtt
+        container_name: homeassistant_zigbee2mqtt
+        restart: unless-stopped
+        volumes:
+            - ./data/zigbee2mqtt:/app/data
+            - /run/udev:/run/udev:ro
+        ports:
+            - 11002:8080
+        environment:
+            - TZ=Europe/Berlin
+        devices:
+            - /dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_[...]:/dev/ttyUSB0
+        depends_on:
+            - mosquitto
+    mosquitto:
+        image: eclipse-mosquitto
+        container_name: homeassistant_mosquitto
+        restart: unless-stopped
+        volumes:
+            - ./data/mosquitto/config:/mosquitto/config
+        environment:
+            TZ: Europe/Berlin
+```
+It is recommended to use the path of the id of the Zigbee dongle instead of just `dev/ttyUSB0` as a source since the path of the dongle may change after a short connection loss to e.g. `dev/ttyUSB1`. By using the id the mapping always works.
+
+I created the `mosquitto.conf` in `./data/mosquitto/config/` which is all the interaction that is to be had with it (no further configuration required):
+```text
+listener 1883
+socket_domain ipv4
+allow_anonymous true
+```
+
+Afterwards, I created the `configuration.yaml` in `/data/zigbee2mqtt/`:
+```yaml
+version: 4
+homeassistant:
+  enabled: true
+frontend:
+  enabled: true
+mqtt:
+  base_topic: zigbee2mqtt
+  server: mqtt://mosquitto:1883
+serial:
+  port: /dev/ttyUSB0
+  adapter: zstack
+  baudrate: 115200
+```
+
+After running `docker compose up -d` Zigbee2MQTT is available at the specified port. There devices can be added. To do this, they have to be factory reset and the discovery mode has to be turned on. Factory resetting the devices is usually done by pressing a button or turning power on and off multiple times (this just depends on the device).
+
+When I added by Philips Hue motion sensors I was pretty happy that I am able to configure the timeout in the settings of the devices. Moreover, it is possible to access the other settings of devices (such as the turn-on behavior after a power restore for my lamps). These are settings I was unable to set in ZHA, which is why I recommend using Zigbee2MQTT. It may sound like a lot more effort to setup, but it is just a few straightforward steps that may bring significant advantages with it.
+
+Adding the devies to Home Assistant is as simple as installing the MQTT integration (no Zigbee integration required as the whole communication between Zigbee2MQTT and Home Assistant is over MQTT) and setting up the URL of the MQTT broker. In my case the hostname is the container name and the port is the default one: `mqtt://mosquitto:1883`. After that, all the devices appear in Home Assistant and are ready to use.
+
+#### Setup of passwords for MQTT
+
+In the setup above there is no authentication required to connect to the MQTT broker. To change this you have to first create a `passwordfile` which contains the username and credentials of the available users. I chose to create two users (one for Zigbee2MQTT and one for Home Assistant). To do this I ran these commands in the Mosquitto container:
+```txt
+# cd mosquitto/config/
+# mosquitto_passwd -c passwordfile zigbee2mqtt
+Password: <pw1>
+Reenter password: <pw1>
+# mosquitto_passwd -b passwordfile homeassistant <pw2>
+```
+This creates the password file which then can be setup in the `mosquitto.conf`.
+
+Afterwards all three softwares must be reconfigured:
+1. Change the `mosquitto.conf` to
+    ```text
+    listener 1883
+    socket_domain ipv4
+    password_file /mosquitto/config/passwordfile
+    ```
+2. Change the `mqtt` part of the `configuration.yaml`of Zigbee2MQTT to
+    ```yaml
+    mqtt:
+      base_topic: zigbee2mqtt
+      server: mqtt://mosquitto:1883
+      keepalive: 60
+      password: <pw1>
+      user: zigbee2mqtt
+      reject_unauthorized: true
+      version: 4
+    ```
+3. Restart the containers
+4. Set the new password in Home Assistant by going to the confiuration of the MQTT integration.
+
+### The whole `docker-compose.yml`
+
+Here you can find my whole `docker-compose.yml` as I only showed the relevant parts of the section above:
+```yml
+services:
+    homeassistant:
+        image: ghcr.io/home-assistant/home-assistant:stable
+        container_name: homeassistant_app
+        volumes:
+            - ./data/homeassistant/config:/config
+            - /etc/localtime:/etc/localtime:ro
+            - /run/dbus:/run/dbus:ro
+        restart: unless-stopped
+        ports:
+            - 11000:8123
+        healthcheck:
+            test:
+                [
+                    "CMD",
+                    "sh",
+                    "-c",
+                    "curl -s -H 'Authorization: Bearer ${CONTAINER_HEALTH_CHECK_ACCESS_TOKEN}' http://localhost:8123/api/config | jq -r '.state' | grep -E ^RUNNING",
+                ]
+            interval: 60s
+            timeout: 5s
+            retries: 3
+            start_period: 90s
+            start_interval: 5s
+        depends_on:
+            - mosquitto
+    matter-hub:
+        image: ghcr.io/t0bst4r/home-assistant-matter-hub
+        container_name: homeassistant_matterhub
+        restart: unless-stopped
+        network_mode: host
+        environment:
+            - HAMH_HOME_ASSISTANT_URL=https://homeassistant.<mydomain>.<tld>
+            - HAMH_HOME_ASSISTANT_ACCESS_TOKEN=${MATTER_HUB_ACCESS_TOKEN}
+            - HAMH_LOG_LEVEL=info
+            - HAMH_HTTP_PORT=11001
+        volumes:
+            - ./data/matter-hub:/data
+        depends_on:
+            homeassistant:
+                condition: service_healthy
+    zigbee2mqtt:
+        image: koenkk/zigbee2mqtt
+        container_name: homeassistant_zigbee2mqtt
+        restart: unless-stopped
+        volumes:
+            - ./data/zigbee2mqtt:/app/data
+            - /run/udev:/run/udev:ro
+        ports:
+            - 11002:8080
+        environment:
+            - TZ=Europe/Berlin
+        devices:
+            - /dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_928f1faaca3aef118b45301455516304-if00-port0:/dev/ttyUSB0
+        depends_on:
+            - mosquitto
+    mosquitto:
+        image: eclipse-mosquitto
+        container_name: homeassistant_mosquitto
+        restart: unless-stopped
+        volumes:
+            - ./data/mosquitto/config:/mosquitto/config
+        environment:
+            TZ: Europe/Berlin
+```
 
 ## Future
 
