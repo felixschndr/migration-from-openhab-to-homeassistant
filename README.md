@@ -21,6 +21,7 @@ In this blog post, I want to document my migration from the smart home system op
       * [Zigbee Network](#zigbee-network)
          * [Setup of passwords for MQTT](#setup-of-passwords-for-mqtt)
       * [The whole docker-compose.yml](#the-whole-docker-composeyml)
+   * [Key takeaways](#key-takeaways)
    * [Future](#future)
    * [Sources and additional resources](#sources-and-additional-resources)
 <!--te-->
@@ -545,6 +546,20 @@ services:
         environment:
             TZ: Europe/Berlin
 ```
+
+## Key takeaways
+
+- The migration from openHAB to Home Assistant takes time: It took me multiple weeks to do the whole migration as these are two systems that are in the same domain but do have quite a few differences. What worked well for me is to
+  1. Start Home Assistant and leave the _old_ system running at the same time
+  2. Add all the devices to Home Assistant
+  3. Create a dashboard to control the devices
+  4. Migrate one automation after the other to Home Assistant
+  5. Decommission the _old_ system
+  
+  This way you don't have any temporal pressure to finish the migration and can fall back to the _old_ system when something is not yet implemented in the _new_ system. 
+- Don't buy **any** hardware that relies on UDP (or similar protocols without ACKs): I bought these nice ceiling lights from Govee. They produce awesome light and look nice. However, they only have a local API that only supports UDP. Thus, you never know whether the lamp received the command you sent it. Moreover, the lamp randomly and often deconnects from the network and thus is completely unresponsive.
+  
+  I am really happy with my usage of Zigbee. It works really well since it uses a mesh network technology and can fully recommend it!
 
 ## Future
 
