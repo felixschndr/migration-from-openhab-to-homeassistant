@@ -9,7 +9,6 @@ In this blog post, I want to document my migration from the smart home system op
    * [Introduction](#introduction)
       * [Reasons to switch](#reasons-to-switch)
       * [Handling of devices in the two systems](#handling-of-devices-in-the-two-systems)
-      * [Starting point](#starting-point)
    * [Installation](#installation)
    * [Configuring Home Assistant](#configuring-home-assistant)
       * [The Home Assistant cloud](#the-home-assistant-cloud)
@@ -28,17 +27,17 @@ In this blog post, I want to document my migration from the smart home system op
 
 ## Introduction
 
-I've been using openHAB for some years now. As I recall I started using it when [version `2.2` was the latest one](https://www.openhab.org/blog/2017-12-18-openhab22.html), which was in December 2017. Since then, I have been using exclusively openHAB to control all my smart devices at home. Thus, I have picked up a lot of knowledge along the way and know my way around. I mostly have been happy with the system. However, there are some annoyances and caveats that led me to try out Home Assistant now.
+I've been using openHAB for some years now. As I recall I started using it when [version `2.2` was the latest one](https://www.openHAB.org/blog/2017-12-18-openHAB22.html), which was in December 2017. Since then, I have been using exclusively openHAB to control all my smart devices at home. Thus, I have picked up a lot of knowledge along the way and know my way around. I mostly have been happy with the system. However, there are some annoyances and caveats that led me to try out Home Assistant now.
 
 To be honest, I tried the migration to Home Assistant a few years ago already. However, I did not finish it and had both systems running side by side. Since I did not have the time back then to finish the project, I ditched Home Assistant and came back to my trusted and known system. This time my goal is to re-setup Home Assistant and migrate fully to it.
 
-openHAB is currently at version `4.3.3` and is about to release version `5`. At the time of writing this (March 2025), the maintainers are [discussing with the community wanted features](https://community.openhab.org/t/ideas-and-discussion-what-features-do-you-want-in-openhab-5-0/160573).
+openHAB is currently at version `4.3.3` and is about to release version `5`. At the time of writing this (March 2025), the maintainers are [discussing with the community wanted features](https://community.openHAB.org/t/ideas-and-discussion-what-features-do-you-want-in-openHAB-5-0/160573).
 
 ### Reasons to switch
 
 I like openHAB and since I have used it for such a long time, I've become quite comfortable with it. However, there are some reasons why I wanted to try out Home Assistant:
  - Written in `Python`: Since I am a full-time **Python** developer, I like to take a look under the hood. For example, I worked with maintainers of openHAB to develop, maintain and fix some bindings. However, this is very limited as openHAB is written in `Java` and I don't feel that comfortable with it.
-- Automations in openHAB: As I started to use openhab in 2017, there were only the [DLS rules](https://www.openhab.org/docs/configuration/rules-dsl.html), a proprietary language based on Java. Since then, they have released [JRuby Scripting](https://www.openhab.org/addons/automation/jrubyscripting/) and [JS Scripting](https://www.openhab.org/addons/automation/jsscripting/) as replacements. However, I never really come to pace with them. Since the DSL rules are pretty old, the syntax is quite clunky and limited.
+- Automations in openHAB: As I started to use openHAB in 2017, there were only the [DLS rules](https://www.openHAB.org/docs/configuration/rules-dsl.html), a proprietary language based on Java. Since then, they have released [JRuby Scripting](https://www.openHAB.org/addons/automation/jrubyscripting/) and [JS Scripting](https://www.openHAB.org/addons/automation/jsscripting/) as replacements. However, I never really come to pace with them. Since the DSL rules are pretty old, the syntax is quite clunky and limited.
   
   Often there have to be multiple conversions for simple things. For example, to determine weather now is before some point in time you have to write something like 
   ```java
@@ -55,19 +54,20 @@ I like openHAB and since I have used it for such a long time, I've become quite 
   ```
  - Error messages in openHAB: When developing automations in openHAB, the error messages leave a lot to be desired. Often the following error message occurs:
    ```java
-   [ERROR] [openhab.core.automation.module.script.internal.handler.AbstractScriptModuleHandler] - Script execution of rule with UID 'Cronjob-2' failed: Could not invoke method: org.openhab.core.model.script.actions.BusEvent.sendCommand(org.openhab.core.items.Item,java.lang.String) on instance: null in Cronjob
+   [ERROR] [openHAB.core.automation.module.script.internal.handler.AbstractScriptModuleHandler] - Script execution of rule with UID 'Cronjob-2' failed: Could not invoke method: org.openHAB.core.model.script.actions.BusEvent.sendCommand(org.openHAB.core.items.Item,java.lang.String) on instance: null in Cronjob
    ```
    or
    ```java
-   [ERROR] [openhab.core.automation.module.script.internal.handler.AbstractScriptModuleHandler] - Script execution of rule with UID 'Sensoren_Badezimmer-2' failed: An error occurred during the script execution: Could not invoke method: java.lang.Integer.parseInt(java.lang.String) on instance: null in Sensoren_Badezimmer
+   [ERROR] [openHAB.core.automation.module.script.internal.handler.AbstractScriptModuleHandler] - Script execution of rule with UID 'Sensoren_Badezimmer-2' failed: An error occurred during the script execution: Could not invoke method: java.lang.Integer.parseInt(java.lang.String) on instance: null in Sensoren_Badezimmer
    ```
    or
    ```java
-   [ERROR] [openhab.core.automation.module.script.internal.handler.AbstractScriptModuleHandler] - Script execution of rule with UID 'Sensoren_Flur-1' failed: cannot invoke method public boolean org.openhab.core.model.script.actions.Timer.reschedule(java.time.ZonedDateTime) on null in Sensoren_Flur
+   [ERROR] [openHAB.core.automation.module.script.internal.handler.AbstractScriptModuleHandler] - Script execution of rule with UID 'Sensoren_Flur-1' failed: cannot invoke method public boolean org.openHAB.core.model.script.actions.Timer.reschedule(java.time.ZonedDateTime) on null in Sensoren_Flur
    ```
    For some reason (which the error does not tell me) *something* in my automation is `null`. To debug this issue, you have to delete line by line in the automation to find the error since there is no other way to debug it.
- - Bugs in bindings: Bindings are integrations of other systems into openHAB. For example, you'd use the `Hue` binding to integrate your Philips Hue devices into openhab. These binding sadly often have some bugs. Just as I opened the log of openHAB to find an error message for the example before, I am greeted with the whole source code of *some* integration and a stack trace at the bottom (which does not help to identify the culprit).
+ - Bugs in bindings: Bindings are integrations of other systems into openHAB. For example, you'd use the `Hue` binding to integrate your Philips Hue devices into openHAB. These binding sadly often have some bugs. Just as I opened the log of openHAB to find an error message for the example before, I am greeted with the whole source code of *some* integration and a stack trace at the bottom (which does not help to identify the culprit).
    ![](assets/error%20in%20log.png)
+ - Bigger community: openHAB and Home Assistant are majorly community driven. With the larger amount of people contributing to Home Assistant there is simply more progress.
  
 
 ### Handling of devices in the two systems
@@ -88,9 +88,7 @@ So there is one more abstraction layer in openHAB: the `Channel`s layer sits bet
 
 Understanding this was crucial to work with Home Assistant.
 
-### Starting point
-
-TODO
+I have many smart lamps, four Amazon Echos, a robot vacuum, multiple motion sensors, two computers, a heating bed, a TV and a soundsystem. All these entities were in openHAB and had to be added to Home Assistant.
 
 ## Installation
 
