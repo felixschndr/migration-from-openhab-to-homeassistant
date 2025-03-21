@@ -578,6 +578,15 @@ services:
 - Don't buy **any** hardware that relies on UDP (or similar protocols without ACKs): I bought these nice ceiling lights from Govee. They produce awesome light and look nice. However, they only have a local API that only supports UDP. Thus, you never know whether the lamp received the command you sent it. Moreover, the lamp randomly and often deconnects from the network and thus is completely unresponsive.
   
   I am really happy with my usage of Zigbee. It works really well since it uses a mesh network technology and can fully recommend it!
+- Advantages of openHAB
+  - Abstraction Layers: Separates devices (Things), their capabilities (Channels), and user-facing items (Items),
+    providing robust mapping for complex setups.
+  - Free cloud: In contrast to Home Assistant the cloud of openHAB which is required to connect devices to voice assistants such as Alexa is free.
+- Advantages of Home Assistant
+  - Rapid Development & Releases: Receives frequent updates and supports a large, growing catalog of integrations.
+  - User-Friendly Automations: Emphasizes YAML or web-based configuration; newcomers (i.e., me) often find it quicker to set up sophisticated rules. 
+  - Python-Based: More approachable for users already familiar with Python (i.e., me), encouraging custom scripts and
+    contributions.
 
 ## Future
 
