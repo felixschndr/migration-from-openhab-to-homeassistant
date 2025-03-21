@@ -4,9 +4,12 @@ In this blog post, I want to document my migration from the smart home system op
 ## Table of contents
 
 <!--ts-->
-   * [Migration from openHAB to Home Assistant](#migration-from-openHAB-to-home-assistant)
+   * [Migration from openHAB to Home Assistant](#migration-from-openhab-to-home-assistant)
    * [Table of contents](#table-of-contents)
-   * [Introduction](#introduction)
+   * [Introduction to the systems](#introduction-to-the-systems)
+      * [Similarities](#similarities)
+      * [Differences](#differences)
+   * [Introduction into my migration](#introduction-into-my-migration)
       * [Reasons to switch](#reasons-to-switch)
       * [Handling of devices in the two systems](#handling-of-devices-in-the-two-systems)
    * [Installation](#installation)
@@ -25,13 +28,33 @@ In this blog post, I want to document my migration from the smart home system op
    * [Sources and additional resources](#sources-and-additional-resources)
 <!--te-->
 
-## Introduction
+## Introduction to the systems
+
+openHAB and Home Assistant are both popular open-source platforms for smart home automation. Each aims to unify all your devices, sensors, and services under one centralized system, enabling you to manage them through a single interface and to build automations that span across different brands and protocols.
+
+Despite sharing the same general goal, openHAB and Home Assistant offer distinct approaches. openHAB uses Java and the OSGi framework under the hood, reflecting its early focus on modularity. Home Assistant, on the other hand, is written mostly in Python, which makes adding custom logic or integrations more approachable for those who are familiar with that language. Both platforms feature vibrant communities that provide help, create plugins/add-ons, and continuously refine the software.
+
+### Similarities
+- Open Source & Community-Driven: Both openHAB and Home Assistant are entirely open source and rely on a large, enthusiastic user base. Contributors submit code, create extensions, and share best practices.
+- Broad Device Compatibility: Each solution integrates with a vast array of protocols and manufacturers (Zigbee, Z-Wave, Wi-Fi, Bluetooth, etc.). This wide support ensures you can manage most of your smart home products in either system.
+- Automation Focus: While the technical details differ, both platforms let you set up automations to trigger actions based on specific conditions (e.g., turning off all lights after midnight, adjusting thermostats on motion detection, etc.).
+
+### Differences
+- Architecture & Terminology: openHAB introduces the concepts of Things, Channels, and Items, while Home Assistant groups Devices into multiple Entities. This extra layer of abstraction in openHAB allows fine-grained linking between physical hardware and the items you manipulate in automations. In Home Assistant, you work more directly with entities tied to each device.
+- Configuration & Scripting: openHAB historically employed the Rules DSL (though it now supports JRuby and
+JavaScript-based automation), whereas Home Assistant encourages YAML configurations, Python-based scripting, and an
+extensive web-based UI for advanced automations.
+- Community Size & Pace: Both are active, but Home Assistant has grown swiftly in recent years, leading to very frequent releases and new features. openHAB also sees regular updates but tends to space them out more.
+
+## Introduction into my migration
 
 I've been using openHAB for some years now. As I recall I started using it when [version `2.2` was the latest one](https://www.openHAB.org/blog/2017-12-18-openHAB22.html), which was in December 2017. Since then, I have been using exclusively openHAB to control all my smart devices at home. Thus, I have picked up a lot of knowledge along the way and know my way around. I mostly have been happy with the system. However, there are some annoyances and caveats that led me to try out Home Assistant now.
 
 To be honest, I tried the migration to Home Assistant a few years ago already. However, I did not finish it and had both systems running side by side. Since I did not have the time back then to finish the project, I ditched Home Assistant and came back to my trusted and known system. This time my goal is to re-setup Home Assistant and migrate fully to it.
 
 openHAB is currently at version `4.3.3` and is about to release version `5`. At the time of writing this (March 2025), the maintainers are [discussing with the community wanted features](https://community.openHAB.org/t/ideas-and-discussion-what-features-do-you-want-in-openHAB-5-0/160573).
+
+I have many smart lamps, four Amazon Echos, a robot vacuum, multiple motion sensors, two computers, a heating bed, a TV and a soundsystem. All these entities were in openHAB and had to be added to Home Assistant.
 
 ### Reasons to switch
 
@@ -69,7 +92,6 @@ I like openHAB and since I have used it for such a long time, I've become quite 
    ![](assets/error%20in%20log.png)
  - Bigger community: openHAB and Home Assistant are majorly community driven. With the larger amount of people contributing to Home Assistant there is simply more progress.
  
-
 ### Handling of devices in the two systems
 
 To begin with, I have to introduce how the two systems depict real world devices. For that, we use the example of a lamp:
@@ -87,8 +109,6 @@ To begin with, I have to introduce how the two systems depict real world devices
 So there is one more abstraction layer in openHAB: the `Channel`s layer sits between the physical device (`Thing`) and the user interface/automation (`Item`).
 
 Understanding this was crucial to work with Home Assistant.
-
-I have many smart lamps, four Amazon Echos, a robot vacuum, multiple motion sensors, two computers, a heating bed, a TV and a soundsystem. All these entities were in openHAB and had to be added to Home Assistant.
 
 ## Installation
 
