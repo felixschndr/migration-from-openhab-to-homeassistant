@@ -4,7 +4,7 @@ In this blog post, I want to document my migration from the smart home system op
 ## Table of contents
 
 <!--ts-->
-   * [Migration from openHAB to Home Assistant](#migration-from-openhab-to-home-assistant)
+   * [Migration from openHAB to Home Assistant](#migration-from-openHAB-to-home-assistant)
    * [Table of contents](#table-of-contents)
    * [Introduction](#introduction)
       * [Reasons to switch](#reasons-to-switch)
