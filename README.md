@@ -21,8 +21,11 @@ In this blog post, I want to document my migration from the smart home system op
       * [Roborock Integration](#roborock-integration)
       * [Voice Assistants](#voice-assistants)
       * [Zigbee Network](#zigbee-network)
+         * [Device settings](#device-settings)
          * [Setup of passwords for MQTT](#setup-of-passwords-for-mqtt)
+         * [Map of the network](#map-of-the-network)
       * [The whole docker-compose.yml](#the-whole-docker-composeyml)
+      * [Increasing the refresh rate of a single entity](#increasing-the-refresh-rate-of-a-single-entity)
    * [Key takeaways](#key-takeaways)
    * [Future](#future)
    * [Sources and additional resources](#sources-and-additional-resources)
@@ -462,6 +465,13 @@ When I added by Philips Hue motion sensors, I was pretty happy that I was able t
 
 Adding the devices to Home Assistant is as simple as installing the MQTT integration (no Zigbee integration required as the whole communication between Zigbee2MQTT and Home Assistant is over MQTT) and setting up the URL of the MQTT broker. In my case the hostname is the container name and the port is the default one: `mqtt://mosquitto:1883`. After that, all the devices appear in Home Assistant and are ready to use.
 
+#### Device settings
+
+As my original problem with ZHA was that I was unable to configure the motion detection timeout, I was pretty happy to see that there are all the settings of a device available in Zigbee2MQTT:
+
+![](assets/zigbeesettings1.png)
+![](assets/zigbeesettings2.png)
+
 #### Setup of passwords for MQTT
 
 In the setup above, there is no authentication required to connect to the MQTT broker. To change this, you have to first create a `passwordfile` which contains the username and credentials of the available users. I chose to create two users (one for Zigbee2MQTT and one for Home Assistant). To do this, I ran these commands in the Mosquitto container:
@@ -493,7 +503,13 @@ Afterwards, all three pieces of software must be reconfigured:
       version: 4
     ```
 3. Restart the containers
-4. Set the new password in Home Assistant by going to the confiuration of the MQTT integration.
+4. Set the new password in Home Assistant by going to the configuration of the MQTT integration.
+
+#### Map of the network
+
+Zigbee2MQTT has a built-in map that allows you to visualize the network, which I found pretty neat:
+![](assets/zigbeemap.png)
+
 
 ### The whole `docker-compose.yml`
 
