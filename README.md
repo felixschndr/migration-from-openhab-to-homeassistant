@@ -90,7 +90,7 @@ I like openHAB and since I have used it for such a long time, I've become quite 
    For some reason (which the error does not tell me) *something* in my automation is `null`. To debug this issue, you have to delete line by line in the automation to find the error since there is no other way to debug it.
  - Bugs in bindings: Bindings are integrations of other systems into openHAB. For example, you'd use the `Hue` binding to integrate your Philips Hue devices into openHAB. These binding sadly often have some bugs. Just as I opened the log of openHAB to find an error message for the example before, I am greeted with the whole source code of *some* integration and a stack trace at the bottom (which does not help to identify the culprit).
    ![](assets/error%20in%20log.png)
- - Bigger community: openHAB and Home Assistant are majorly community driven. With the larger amount of people contributing to Home Assistant there is simply more progress.
+ - Bigger community: openHAB and Home Assistant are majorly community driven. With the larger number of people contributing to Home Assistant there is simply more progress.
  
 ### Handling of devices in the two systems
 
@@ -232,7 +232,7 @@ services:
       homeassistant:
         condition: service_healthy
 ```
-This works by crawling the API of Home Assistant for its state and checks if it is `RUNNING`. Only after that is the case the Matter Hub starts up. The `${CONTAINER_HEALTH_CHECK_ACCESS_TOKEN}` is a long-lived access token that can be [created in the `Security` section of the user profile](https://community.home-assistant.io/t/how-to-get-long-lived-access-token/162159/5).
+This works by crawling the API of Home Assistant for its state and checks if it is `RUNNING`. Only after that is the case, the Matter Hub starts up. The `${CONTAINER_HEALTH_CHECK_ACCESS_TOKEN}` is a long-lived access token that can be [created in the `Security` section of the user profile](https://community.home-assistant.io/t/how-to-get-long-lived-access-token/162159/5).
 
 ### Roborock Integration
 
@@ -399,7 +399,7 @@ Both support connecting devices via Zigbee to Home Assistant, and they offer ver
 
 However, I had a problem with my Philips Hue motion sensors that I connected via ZHA: The timeout of them was set to 5 minutes and not changeable. So, when they stopped to detect motion, it took 5 minutes for the device in Home Assistant to report no further movement. This was a dealbreaker for me as I wanted to build some automations that turn the light off after *only* 30s of no movement. After [asking in the community forum](https://community.home-assistant.io/t/cooldown-time-of-hue-motion-sensor-using-zha/863210) and not getting a helpful response and finding out that is possible to configure that timeout in Zigbee2MQTT I decided to try Zigbee2MQTT.
 
-While I was worried that the setup would be a huge hassle, it turned out to be quite the opposite. To use Zigbee2MQTT in Home Assistant Zigbee2MQTT and the MQTT broker can be setup as an Add-On. However, since I use the containerized version of Home Assistant, I can't use Add-Ons. Fortunately setting both of them as their own containers up is really easy. I started by updating my docker-compose.yml:
+While I was worried that the setup would be a huge hassle, it turned out to be quite the opposite. To use Zigbee2MQTT in Home Assistant, Zigbee2MQTT and the MQTT broker can be setup as an Add-On. However, since I use the containerized version of Home Assistant, I can't use Add-Ons. Fortunately, setting both of them as their own containers up is really easy. I started by updating my docker-compose.yml:
 ```yml
 services:
     homeassistant:
@@ -458,14 +458,14 @@ serial:
 
 After running `docker compose up -d` Zigbee2MQTT is available at the specified port. There devices can be added. To do this, they have to be factory reset and the discovery mode has to be turned on. Factory resetting the devices is usually done by pressing a button or turning power on and off multiple times (this just depends on the device).
 
-When I added by Philips Hue motion sensors I was pretty happy that I am able to configure the timeout in the settings of the devices. Moreover, it is possible to access the other settings of devices (such as the turn-on behavior after a power restore for my lamps). These are settings I was unable to set in ZHA, which is why I recommend using Zigbee2MQTT. It may sound like a lot more effort to setup, but it is just a few straightforward steps that may bring significant advantages with it.
+When I added by Philips Hue motion sensors, I was pretty happy that I was able to configure the timeout in the settings of the devices. Moreover, it is possible to access the other settings of devices (such as the turn-on behavior after a power restore for my lamps). These are settings I was unable to set in ZHA, which is why I recommend using Zigbee2MQTT. It may sound like a lot more effort to set up, but it is just a few straightforward steps that may bring significant advantages with it.
 
-Adding the devies to Home Assistant is as simple as installing the MQTT integration (no Zigbee integration required as the whole communication between Zigbee2MQTT and Home Assistant is over MQTT) and setting up the URL of the MQTT broker. In my case the hostname is the container name and the port is the default one: `mqtt://mosquitto:1883`. After that, all the devices appear in Home Assistant and are ready to use.
+Adding the devices to Home Assistant is as simple as installing the MQTT integration (no Zigbee integration required as the whole communication between Zigbee2MQTT and Home Assistant is over MQTT) and setting up the URL of the MQTT broker. In my case the hostname is the container name and the port is the default one: `mqtt://mosquitto:1883`. After that, all the devices appear in Home Assistant and are ready to use.
 
 #### Setup of passwords for MQTT
 
-In the setup above there is no authentication required to connect to the MQTT broker. To change this you have to first create a `passwordfile` which contains the username and credentials of the available users. I chose to create two users (one for Zigbee2MQTT and one for Home Assistant). To do this I ran these commands in the Mosquitto container:
-```txt
+In the setup above, there is no authentication required to connect to the MQTT broker. To change this, you have to first create a `passwordfile` which contains the username and credentials of the available users. I chose to create two users (one for Zigbee2MQTT and one for Home Assistant). To do this, I ran these commands in the Mosquitto container:
+```text
 # cd mosquitto/config/
 # mosquitto_passwd -c passwordfile zigbee2mqtt
 Password: <pw1>
@@ -474,7 +474,7 @@ Reenter password: <pw1>
 ```
 This creates the password file which then can be setup in the `mosquitto.conf`.
 
-Afterwards all three softwares must be reconfigured:
+Afterwards, all three pieces of software must be reconfigured:
 1. Change the `mosquitto.conf` to
     ```text
     listener 1883
