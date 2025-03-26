@@ -565,6 +565,65 @@ services:
             TZ: Europe/Berlin
 ```
 
+### Increasing the refresh rate of a single entity
+
+I developed an automation that turns on the power to a soundsystem if the Amazon Echo Dot connected to it starts playing Music:
+```yaml
+alias: "Turn soundsystem on, when playing music"
+description: ""
+triggers:
+  - trigger: state
+    entity_id:
+      - media_player.echo_kueche_soundsystem
+    to: playing
+conditions: [ ]
+actions:
+  - type: turn_on
+    device_id: b1532049c763b8d8d1e536a25f90bd26
+    entity_id: ee74c24124052c4b945c11dc0c451efb
+    domain: switch
+  - wait_for_trigger:
+      - trigger: state
+        entity_id:
+          - media_player.echo_kueche_soundsystem
+        from: playing
+        for:
+          hours: 0
+          minutes: 0
+          seconds: 45
+  - type: turn_off
+    device_id: b1532049c763b8d8d1e536a25f90bd26
+    entity_id: ee74c24124052c4b945c11dc0c451efb
+    domain: switch
+mode: restart
+```
+However, I noticed that `media_player.echo_kueche_soundsystem` only updates about twice a minute. Thus, when starting the music, the entity only updates half a minute later and I thus miss the music. To combat this, I found out that it is possible to manually update an entity. So I built a second automation that updates the status of the `media_player` every 10 seconds:
+```yaml
+alias: "Every 10 Seconds: Update the status of the echo in the kitchen"
+description: ""
+triggers:
+  - trigger: time_pattern
+    seconds: /10
+conditions: [ ]
+actions:
+  - action: homeassistant.update_entity
+    metadata: { }
+    data:
+      entity_id:
+        - media_player.echo_kueche_soundsystem
+mode: single
+```
+
+This works flawlessly, and my original automation works as expected now with less delay.
+
+However, since all the automation runs are added to the logs, this automation spammed many entries. I found out that is possible to stop an automation from appearing in the logs by adding an entry in the `configuration.yaml`:
+```yaml
+recorder:
+  exclude:
+    entities:
+      - automation.every_10_seconds_update_the_status_of_the_echo_in_the_kitchen
+```
+
 ## Key takeaways
 
 - The migration from openHAB to Home Assistant takes time: It took me multiple weeks to do the whole migration as these are two systems that are in the same domain but do have quite a few differences. What worked well for me is to
